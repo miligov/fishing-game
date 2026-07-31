@@ -1437,7 +1437,7 @@ function drawReel(){
   ctx.fillStyle=zg;rrect(bx+2,zy,bw-4,zh,6);ctx.fill();
   /* рыба */
   var fy=by+G.fy*bh;
-  ctx.font='17px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='17px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla","EmojiOne Color",serif';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(G.fish?G.fish.f.e:'🐟',bx+bw/2,fy);
   ctx.textBaseline='alphabetic';
   /* прогресс слева */
@@ -1977,7 +1977,7 @@ function aqDraw(dt){
   for(var x=0;x<=aqW;x+=18)c.lineTo(x,aqH-11-Math.sin(x*.09)*3);
   c.lineTo(aqW,aqH);c.closePath();c.fill();
   /* декор */
-  c.font='22px serif';c.textAlign='center';c.textBaseline='bottom';
+  c.font='22px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla","EmojiOne Color",serif';c.textAlign='center';c.textBaseline='bottom';
   (P.decor||[]).forEach(function(id,i){
     var d=decorById(id);if(!d)return;
     var dx=18+i*((aqW-36)/Math.max(1,(P.decor.length-1)||1));
@@ -2010,7 +2010,7 @@ function aqDraw(dt){
     c.translate(F2.x,F2.y);
     if(F2.vx<0)c.scale(-1,1);
     c.globalAlpha=sat<.25?.55:1;
-    c.font=F2.sz+'px serif';c.textAlign='center';
+    c.font=F2.sz+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla","EmojiOne Color",serif';c.textAlign='center';
     c.fillText(F2.e,0,0);
     c.restore();
   }
