@@ -798,7 +798,11 @@ function actx(){
     try{
       var C=window.AudioContext||window.webkitAudioContext;
       A.ctx=new C();
-      A.master=A.ctx.createGain();A.master.gain.value=.9;A.master.connect(A.ctx.destination);
+      /* Мастер-громкость — общий рубильник всего звука. Если звук
+         выключен (P.snd===false), контекст создаётся сразу молчаливым:
+         музыка, фон и эффекты идут через A.master. */
+      var muted=typeof P!=='undefined'&&P.snd===false;
+      A.master=A.ctx.createGain();A.master.gain.value=muted?0:.9;A.master.connect(A.ctx.destination);
       A.mus=A.ctx.createGain();A.mus.gain.value=.0001;A.mus.connect(A.master);
       A.sfx=A.ctx.createGain();A.sfx.gain.value=.9;A.sfx.connect(A.master);
       A.amb=A.ctx.createGain();A.amb.gain.value=.0001;A.amb.connect(A.master);
@@ -913,6 +917,14 @@ function schedTick(){
 function startMusic(){
   if(!actx()||!A.on)return;
   startAmbient();
+  /* Если шум воды уже создан, но был заглушён (выключение звука),
+     возвращаем его — иначе после mute→unmute фон воды пропадал
+     навсегда (startAmbient пропускает уже созданные узлы). */
+  if(A.amb&&A.ambNodes){
+    var ta=A.ctx.currentTime;
+    A.amb.gain.cancelScheduledValues(ta);
+    A.amb.gain.setTargetAtTime(.16,ta,.5);
+  }
   if(A.timer)return;
   A.step=0;A.next=A.ctx.currentTime+.2;
   var g=A.mus.gain,t=A.ctx.currentTime;
@@ -954,7 +966,10 @@ function nz(d,v,hp,t0,lp){
   s.connect(f);out.connect(g);g.connect(A.sfx);s.start(t);s.stop(t+d+.05);
 }
 function sfx(n){
-  if(!A.on||!actx())return;
+  /* Звук выключен кнопкой — эффекты не играют вообще.
+     Требование модерации: кнопка должна отключать ВЕСЬ звук,
+     а не только музыку. */
+  if(P.snd===false||!A.on||!actx())return;
   var c=A.ctx,t=c.currentTime;
   switch(n){
     case 'click': bp(700,.045,'square',.05); break;
@@ -986,9 +1001,26 @@ function audioWake(){
   if(!actx())return;
   if(P.snd!==false)startMusic();
 }
+/* Мастер-громкость — общий рубильник. Через неё идут и музыка,
+   и фон, и все эффекты, поэтому она глушит всё разом. */
+function setMasterVol(v){
+  if(!A.ctx||!A.master)return;
+  var t=A.ctx.currentTime;
+  A.master.gain.cancelScheduledValues(t);
+  A.master.gain.setTargetAtTime(v,t,.04);
+}
 function toggleSnd(){
   P.snd=(P.snd===false);
-  if(P.snd){A.started=true;actx();startMusic();}else stopMusic();
+  if(P.snd){
+    A.started=true;
+    if(actx()){
+      setMasterVol(.9);
+      startMusic();
+    }
+  }else{
+    stopMusic();
+    setMasterVol(0);   /* глушит и эффекты, и музыку, и фон */
+  }
   $('sndBtn').textContent=P.snd?'🔊':'🔇';
   save();toast(P.snd?'🔊 Звук включён':'🔇 Звук выключен');
 }
@@ -3254,5 +3286,5 @@ try{window.__FA=FA;window.__MOD={
 
 
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a26d3e754e898d59',t:'MTc4NjAxMDk0NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
